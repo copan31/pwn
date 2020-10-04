@@ -1,0 +1,55 @@
+●初回
+# フォルダ作成と実行
+mkdir c:\ctf
+cd c:\ctf
+# checksecを取ってくる
+git clone https://github.com/slimm609/checksec.sh
+# pedaを取ってくる
+git clone https://github.com/longld/peda.git ~/peda
+# Pwngdbを取ってくる
+git clone https://github.com/scwuaptx/Pwngdb.git
+# pedaとPwngdbを使えるようにする。
+cp ~/Pwngdb/.gdbinit ~/
+
+----
+●環境起動
+# コンテナ1(python2系　inutilやsocatがある) (https://hub.docker.com/r/inaz2/ctfbox)
+docker run --rm -it --name analyze   -v c:\ctf:/home/ctf -w /home/ctf --privileged --net=host inaz2/ctfbox
+# コンテナ2(python2系　pwntools用) (https://hub.docker.com/r/pwntools/pwntools)
+docker run --rm -it --name pwntools  -v c:\ctf:/home/ctf -w /home/ctf --net=host pwntools/pwntools
+# コンテナ3(ruby(one_gadget実行のみ)) (https://hub.docker.com/r/tecknicaltom/one_gadget)
+docker run --rm -it --name onegadget -v c:\ctf:/home/ctf -w /home/ctf tecknicaltom/one_gadget /bin/bash
+# コンテナ4(攻撃スクリプト実行用)
+docker run --rm -it --name attach    -v c:\ctf:/home/ctf -w /home/ctf --privileged --net=host inaz2/ctfbox
+# コンテナ5(gdbserver用)
+docker run --rm -it --name gdbserver -v c:\ctf:/home/ctf -w /home/ctf --privileged --net=host inaz2/ctfbox
+# Malleus CTF Pwnの問題サーバ
+docker run --rm -it -p 10080:80 -p 10001-10012:10001-10012 kusanok/ctfpwn:2
+# コンテナ6(python3系)
+docker run --rm -it --name python3   -v C:\ctf:/home/ctf -w /home/ctf --net=host rackspacedot/python37 /bin/bash
+
+
+
+# socatサーバ起動 @ コンテナ5
+socat tcp-l:7777,reuseaddr,fork system:./[binファイル]
+# socatサーバ&gdbserver起動 @ コンテナ5
+socat tcp-l:7777,reuseaddr,fork 'system:gdbserver localhost\:8888 ./[binファイル]'
+# socatサーバ接続 @ コンテナ4
+nc localhost 7777
+# gdbserver接続(nc localhost 7777の後に実行) @ コンテナ1
+gdb -ex 'target remote localhost:8888' -ex 'b main' -ex 'c'
+
+----
+
+
+
+●解析
+# 逆アセンブル (Intel記法) @ コンテナ1
+objdump -d -M intel [file] > [file].txt
+
+# 各セクションのファイル中のオフセットと実行時に配置されるメモリアドレスを調査 @ コンテナ1
+readelf -S rot13
+
+# セキュリティ機構の有効無効を見る @ コンテナ2
+checksec [file]
+
