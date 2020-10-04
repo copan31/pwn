@@ -27,6 +27,8 @@ docker run --rm -it --name gdbserver -v c:\ctf:/home/ctf -w /home/ctf --privileg
 docker run --rm -it -p 10080:80 -p 10001-10012:10001-10012 kusanok/ctfpwn:2
 # コンテナ6(python3系)
 docker run --rm -it --name python3   -v C:\ctf:/home/ctf -w /home/ctf --net=host rackspacedot/python37 /bin/bash
+# コンテナ7(radare2用)
+docker run --rm -it --name radare2   -v C:\ctf:/home/ctf -w /home/ctf --net=host radare/radare2 /bin/bash
 
 
 
@@ -53,3 +55,31 @@ readelf -S rot13
 # セキュリティ機構の有効無効を見る @ コンテナ2
 checksec [file]
 
+# 静的解析(linuxコマンド)
+file [elfファイル]
+readelf [elfファイル]
+readelf -l [elfファイル]
+
+# 静的解析(radare2)
+r2 [elfファイル]
+aa  # 解析モードにする(Analyze)
+afl # 関数表示(Analyze File List)
+s main # mainをサーチ(Seekコマンド)
+pdf # 逆アセンブル
+pdc # デコンパイル
+VV  # フロー化(大文字のVVであることに注意)
+
+# 動的解析(radare2)
+r2 -d [elfファイル]
+dcu  [ 指定アドレス or 関数 ] # 指定アドレス（関数）に飛ぶ
+
+V    # バイナリファイル表示モード
+p    # 逆アセンブル結果表示(Vコマンド中)
+q    # Vコマンドから抜ける(radare shellに戻る)
+
+V!   # ビジュアルモード
+s    # ステップ実行(ビジュアルモード中)
+q    # ビジュアルモードから抜ける(radare shellに戻る)   
+
+db [アドレス]  # ブレークポイント設定(アドレスは0xFFFF形式で*はいらない)
+dc             # ブレークポイントまで実行
